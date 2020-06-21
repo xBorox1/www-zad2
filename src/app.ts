@@ -1,4 +1,4 @@
-import {changePassword, getAverageCorrect, getQuestions, getQuiz, getQuizzes, saveAnswers} from "./db";
+import {changePassword, getAverageCorrect, getQuestions, getQuiz, getQuizzes, getSolved, saveAnswers} from "./db";
 import {countResult, getBestResults, getReport, isSolved} from "./results";
 
 const express = require('express');
@@ -17,7 +17,7 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { maxAge: 600000 }}))
+app.use(session({ secret: 'quiiiiizy', resave: true, saveUninitialized: true, cookie: { maxAge: 600000 }}))
 require('./auth').authInit();
 app.use(passport.initialize());
 app.use(passport.session());
@@ -40,8 +40,8 @@ app.post('/login', passport.authenticate('local', {
 }))
 
 app.get('/logout', (req, res) => {
-    req.logOut()
-    res.redirect('/')
+    req.logOut();
+    res.redirect('/');
 })
 
 app.get('/profile', function(req, res) {
@@ -68,6 +68,7 @@ app.post('/change', async (req, res) => {
     const user = getUser(req);
     if(user) {
         await changePassword(user, req.body.password);
+        req.logOut();
         res.render('login', {message: "Hasło zostało zmienione"})
     }
     else {
@@ -122,6 +123,17 @@ app.post('/results/:quizId', async (req, res) => {
         const averages = await getAverageCorrect(req.params.quizId);
         const best = await getBestResults(req.params.quizId);
         res.render('results', {report: report, averages: averages, best: best});
+    }
+    else {
+        res.render('login', {message: "Nie jesteś zalogowany"})
+    }
+})
+
+app.get('/solved', async (req, res) => {
+    const user = getUser(req);
+    if(user) {
+        const quizzes = await getSolved(user.username);
+        res.render('solved', {quizzes : quizzes});
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})

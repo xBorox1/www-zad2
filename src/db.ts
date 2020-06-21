@@ -287,6 +287,24 @@ export async function getBest(quiz_id) {
     return best;
 }
 
+export async function getSolved(username) {
+    sqlite3.verbose();
+    let quizzes : Quiz[] = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, reject) => {
+        db.all('SELECT * FROM quizzes WHERE id IN (SELECT quiz_id FROM answers WHERE username=' + '\"' + username + '\" );', [], (err, rows) => {
+            if (err) throw(err);
+            for(const row of rows)
+            {
+                let {id, intro} = row;
+                quizzes.push({id, intro});
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return quizzes;
+}
+
 export async function changePassword(user, password) {
     sqlite3.verbose();
     let db = new sqlite3.Database('baza.db');
