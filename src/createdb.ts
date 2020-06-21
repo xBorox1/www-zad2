@@ -1,5 +1,3 @@
-import {createDB, writeQuizes, writeUsers} from "./db";
+import {createDB} from "./db";
 
 createDB();
-writeUsers();
-writeQuizes();

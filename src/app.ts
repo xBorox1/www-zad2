@@ -1,4 +1,4 @@
-import {changePassword} from "./db";
+import {changePassword, getQuizzes} from "./db";
 
 const express = require('express');
 const session = require('express-session');
@@ -68,6 +68,18 @@ app.post('/change', async (req, res) => {
     if(user) {
         await changePassword(user, req.body.password);
         res.render('login', {message: "Hasło zostało zmienione"})
+    }
+    else {
+        res.render('login', {message: "Nie jesteś zalogowany"})
+    }
+})
+
+app.get('/', async (req, res) => {
+    const user = getUser(req);
+    if(user) {
+        const quizzes = await getQuizzes();
+        console.log(quizzes);
+        res.render('index', {message: "", quizzes: quizzes});
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})

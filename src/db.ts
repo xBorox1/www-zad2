@@ -69,7 +69,7 @@ const questions : Question[] = [
     {
         quiz_id: 2,
         num: 1,
-        text: "Ile stron ma \"Pan Tadeusz\"?",
+        text: "Ile stron ma Pan Tadeusz?",
         answer: 400,
         penalty: 15
     },
@@ -77,7 +77,7 @@ const questions : Question[] = [
     {
         quiz_id: 2,
         num: 2,
-        text: "Ile wersów ma \"Pan Tadeusz\"?",
+        text: "Ile wersów ma Pan Tadeusz?",
         answer: 9721,
         penalty: 3
     },
@@ -85,45 +85,46 @@ const questions : Question[] = [
     {
         quiz_id: 2,
         num: 3,
-        text: "Ile słów ma \"Pan Tadeusz\"?",
+        text: "Ile słów ma Pan Tadeusz?",
         answer: 68682,
         penalty: 12
     },
 ]
 
-export function createDB() {
+export async function createDB() {
     sqlite3.verbose();
     let db = new sqlite3.Database('baza.db');
-    db.run('CREATE TABLE users (id INT, username VARCHAR(255), password VARCHAR(255));');
-    db.run('CREATE TABLE quizzes (id INT, intro TEXT);');
-    db.run('CREATE TABLE questions (quiz_id INT, num INT, text TEXT, answer INT, penalty INT);');
-    db.close();
-}
 
-export async function writeUsers() {
-    sqlite3.verbose();
-    let db = new sqlite3.Database('baza.db');
-    const passwd1 = await bcrypt.hash("admin", 10);
-    const passwd2 = await bcrypt.hash("kubica", 10);
-    db.run('INSERT INTO users (id, username, password) VALUES (0, \"admin\", ' + '\"' + passwd1 + '\"), (1, \"robert\", ' + '\"' + passwd2 + '\");');
-    db.close();
-}
+    const passwd1 = await bcrypt.hash("user1", 10);
+    const passwd2 = await bcrypt.hash("user2", 10);
 
-export function writeQuizes() {
-    sqlite3.verbose();
-    let db = new sqlite3.Database('baza.db');
-    let stmt = db.prepare('INSERT INTO quizzes VALUES(json(?))');
+    let quizCommand = "INSERT INTO quizzes (id, intro) VALUES ";
+    let questionCommand = "INSERT INTO questions (quiz_id, num, text, answer, penalty) VALUES ";
+    let first = false;
 
     for(const quiz of quizzes) {
-        stmt.run(JSON.stringify(quiz));
+        if(first) quizCommand += ", ";
+        quizCommand += "(" + quiz.id + ", \"" + quiz.intro + "\")";
+        first = true;
     }
+    quizCommand += ';';
 
-    stmt = db.prepare('INSERT INTO questions VALUES(json(?))');
-
+    first = false;
     for(const question of questions) {
-        stmt.run(JSON.stringify(question));
+        if(first) questionCommand += ", ";
+        questionCommand += "(" + question.quiz_id + ", " + question.num + ", \"" + question.text + "\", " + question.answer + ", " + question.penalty + ")";
+        first = true;
     }
+    questionCommand += ';';
 
+    db.serialize(() => {
+        db.run('CREATE TABLE users (id INT, username VARCHAR(255), password VARCHAR(255));');
+        db.run('CREATE TABLE quizzes (id INT, intro TEXT);');
+        db.run('CREATE TABLE questions (quiz_id INT, num INT, text TEXT, answer INT, penalty INT);');
+        db.run('INSERT INTO users (id, username, password) VALUES (0, \"user1\", ' + '\"' + passwd1 + '\"), (1, \"user2\", ' + '\"' + passwd2 + '\");');
+        db.run(quizCommand);
+        db.run(questionCommand);
+    });
     db.close();
 }
 
@@ -143,6 +144,24 @@ export async function getUsers() {
     })});
     db.close();
     return users;
+}
+
+export async function getQuizzes() {
+    sqlite3.verbose();
+    let quizzes : Quiz[] = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, rejest) => {
+        db.all('SELECT * FROM quizzes;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const row of rows)
+            {
+                let {id, intro} = row;
+                quizzes.push({id, intro});
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return quizzes;
 }
 
 export async function changePassword(user, password) {

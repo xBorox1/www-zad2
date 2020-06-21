@@ -1,0 +1,12 @@
+html
+    head
+        title Quizy
+    style
+        include style.css
+    body
+        h2 Dostępne quizy
+        div
+        each quiz in quizzes
+            div(class='intr') #{quiz.intro}
+                br
+                button(onclick="location.href = '/quiz?id=" + quiz.id + "'") Rozwiąż

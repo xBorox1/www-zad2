@@ -4,10 +4,11 @@ body {
 	border-bottom: 2px solid white;
 }
 
-#intro {
+.intr {
 	font-size: 30px;
 	text-align: center;
-	border-bottom: 2px solid white;
+	border: 2px solid white;
+	height: 100px;
 }
 
 span.correct {
