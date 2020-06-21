@@ -1,0 +1,15 @@
+html
+    head
+        title Login
+    style
+        include style.css
+    body
+        h2 Login
+        form(action="/login" method="POST")
+            input(type="text" name="username" id="username" placeholder="Tutaj wpisz nazwę użytkownika")
+            br
+            input(type="password" name="password" id="password" placeholder="Tutaj wpisz hasło użytkownika")
+            br
+            input(type='submit' value='Login')
+        br
+        span(class="incorrect") #{message}

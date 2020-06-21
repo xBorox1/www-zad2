@@ -1,0 +1,53 @@
+body {
+	background-color: grey;
+	text-align: center;
+	border-bottom: 2px solid white;
+}
+
+#intro {
+	font-size: 30px;
+	text-align: center;
+	border-bottom: 2px solid white;
+}
+
+span.correct {
+	color: lime;
+	font-weight: bold;
+}
+
+span.incorrect {
+	color: red;
+	font-weight: bold;
+}
+
+button {
+	background-color: white;
+}
+
+@media (max-height: 600px) {
+	body {
+		height: 100%;
+		text-align: left;
+		border: none;
+	}
+
+	#intro {
+		font-size: 10px;
+	}
+
+	#quiz {
+		width: 50%;
+		font-size: 10px;
+		float: right;
+		text-align: center;
+	}
+
+	#question {
+		float: left;
+	}
+
+	#answer {
+		width: 50px;
+	}
+
+}

@@ -1,0 +1,11 @@
+html
+    head
+        title Zmiana hasła
+    style
+        include style.css
+    body
+        h2 Zmiana hasła
+        form(action="/change" method="POST")
+            input(type="text" name="password" id="password" placeholder="Tutaj wpisz nowe hasło")
+            br
+            input(type='submit' value='Zmień')
