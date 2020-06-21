@@ -5,13 +5,21 @@ html
         meta(http-equiv='X-UA-Compatible', content='IE=edge')
         title Quiz
         meta(name='viewport', content='width=device-width, initial-scale=1')
-        link(rel='stylesheet', type='text/css', media='screen', href='style.css')
-        script(src='./src/quiz.js')
+        style
+            include style.css
+        script.
+             quiz = !{JSON.stringify(quiz)}
+             questions = !{JSON.stringify(questions)}
+             maxNum = #{questions.length};
+             answers = new Array(maxNum);
+             times = new Array(maxNum);
+        script
+            include ../src/quiz.js
     body
         #intro
         br
         #question
-        button#start(type='button')  Zacznij nowy quiz
+        button#start(type='button')  Zacznij quiz
         #quiz
             input#answer(type='text')
             br
@@ -21,15 +29,3 @@ html
             #footer
             #timer
             button#cancel(type='button')  Anuluj quiz
-        #stats
-            input#chbox(type='checkbox', value='stats')
-            |  Zapisz statystyki
-            br
-            button#save(type='button')  Zapisz wynik
-        br
-        br
-        #storage
-            | Top 5 najlepszych wyników :
-            br
-            ul#storage-list
-        br

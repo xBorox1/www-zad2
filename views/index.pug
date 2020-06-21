@@ -9,4 +9,4 @@ html
         each quiz in quizzes
             div(class='intr') #{quiz.intro}
                 br
-                button(onclick="location.href = '/quiz?id=" + quiz.id + "'") Rozwiąż
+                button(onclick="location.href = '/quiz/" + quiz.id + "'") Rozwiąż

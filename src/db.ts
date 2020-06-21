@@ -1,5 +1,5 @@
 import * as sqlite3 from 'sqlite3';
-import {Question, Quiz, User} from './models';
+import {Answer, PartQuestion, Question, Quiz, User} from './models';
 const bcrypt = require('bcrypt');
 
 const quizzes : Quiz[] = [
@@ -121,6 +121,7 @@ export async function createDB() {
         db.run('CREATE TABLE users (id INT, username VARCHAR(255), password VARCHAR(255));');
         db.run('CREATE TABLE quizzes (id INT, intro TEXT);');
         db.run('CREATE TABLE questions (quiz_id INT, num INT, text TEXT, answer INT, penalty INT);');
+        db.run('CREATE TABLE answers (username VARCHAR(255), quiz_id INT, num INT, correct INT, answer INT, time INT);');
         db.run('INSERT INTO users (id, username, password) VALUES (0, \"user1\", ' + '\"' + passwd1 + '\"), (1, \"user2\", ' + '\"' + passwd2 + '\");');
         db.run(quizCommand);
         db.run(questionCommand);
@@ -162,6 +163,94 @@ export async function getQuizzes() {
         })});
     db.close();
     return quizzes;
+}
+
+export async function getQuiz(id) {
+    sqlite3.verbose();
+    let db = new sqlite3.Database('baza.db');
+    let quiz : Quiz;
+    await new Promise((resolve, rejest) => {
+        db.all('SELECT * FROM quizzes WHERE id=' + id + ';', [], (err, rows) => {
+            if (err) throw(err);
+            for(const row of rows)
+            {
+                let {id, intro} = row;
+                quiz = {id, intro};
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return quiz;
+}
+
+export async function getQuestions(quiz_id) {
+    sqlite3.verbose();
+    let questions : PartQuestion[] = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, rejest) => {
+        db.all('SELECT text, penalty FROM questions WHERE quiz_id=' + quiz_id + ' ORDER BY num;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const row of rows)
+            {
+                let {text, penalty} = row;
+                questions.push({text, penalty});
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return questions;
+}
+
+export async function getAnswers(quiz_id) {
+    sqlite3.verbose();
+    let answers = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, rejest) => {
+        db.all('SELECT answer FROM questions WHERE quiz_id=' + quiz_id + ' ORDER BY num;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const answer of rows)
+            {
+                answers.push(answer);
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return answers;
+}
+
+export function saveAnswers(quiz_id, username, results) {
+    sqlite3.verbose();
+    let db = new sqlite3.Database('baza.db');
+    let command = "INSERT INTO answers (username, quiz_id, num, correct, answer, time) VALUES ";
+    let first = false;
+    let counter = 0;
+
+    for(const res of results) {
+        if(first) command += ", ";
+        command += "(\"" + username + "\", " + quiz_id + ", " + counter + ", " + res[0] + ", " + res[2] + ", " + res[1] + ")";
+        first = true;
+        counter++;
+    }
+
+    db.run(command);
+    db.close();
+}
+
+export async function getUserAnswers(quiz_id, username) {
+    sqlite3.verbose();
+    let answers : Answer[] = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, rejest) => {
+        db.all('SELECT * FROM answers WHERE quiz_id=' + quiz_id + ' AND username=' + '\"' + username + '\" ORDER BY num;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const answer of rows)
+            {
+                answers.push(answer);
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return answers;
 }
 
 export async function changePassword(user, password) {

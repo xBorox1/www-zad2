@@ -1,4 +1,5 @@
-import {changePassword, getQuizzes} from "./db";
+import {changePassword, getQuestions, getQuiz, getQuizzes, saveAnswers} from "./db";
+import {countResult, getReport} from "./results";
 
 const express = require('express');
 const session = require('express-session');
@@ -16,7 +17,7 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { maxAge: 60000 }}))
+app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { maxAge: 600000 }}))
 require('./auth').authInit();
 app.use(passport.initialize());
 app.use(passport.session());
@@ -75,11 +76,40 @@ app.post('/change', async (req, res) => {
 })
 
 app.get('/', async (req, res) => {
+    const quizzes = await getQuizzes();
+    res.render('index', {message: "", quizzes: quizzes});
+})
+
+app.get('/quiz/:quizId', async (req, res) => {
     const user = getUser(req);
     if(user) {
-        const quizzes = await getQuizzes();
-        console.log(quizzes);
-        res.render('index', {message: "", quizzes: quizzes});
+        const quiz = await getQuiz(req.params.quizId);
+        const questions = await getQuestions(req.params.quizId);
+        res.render('quiz', {quiz: quiz, questions: questions});
+    }
+    else {
+        res.render('login', {message: "Nie jesteś zalogowany"})
+    }
+})
+
+app.get('/results/:quizId', async (req, res) => {
+    const user = getUser(req);
+    if(user) {
+        const report = await getReport(req.params.quizId, user.username);
+    }
+    else {
+        res.render('login', {message: "Nie jesteś zalogowany"})
+    }
+})
+
+app.post('/results/:quizId', async (req, res) => {
+    const user = getUser(req);
+    if(user) {
+        const answers = req.body.answers.split(',');
+        const times = req.body.times.split(',');
+        const result = countResult(req.params.quizId, answers, times);
+        saveAnswers(req.params.quizId, user.username, result);
+        const report = await getReport(req.params.quizId, user.username);
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})
