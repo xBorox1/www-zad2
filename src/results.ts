@@ -65,4 +65,9 @@ export async function getBestResults(quiz_id) {
     return best;
 }
 
+export async function isSolved(quiz_id, username) {
+    const userAnswers = await getUserAnswers(quiz_id, username);
+    return userAnswers.length != 0;
+}
+
 

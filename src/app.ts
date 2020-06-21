@@ -1,5 +1,5 @@
 import {changePassword, getAverageCorrect, getQuestions, getQuiz, getQuizzes, saveAnswers} from "./db";
-import {countResult, getBestResults, getReport} from "./results";
+import {countResult, getBestResults, getReport, isSolved} from "./results";
 
 const express = require('express');
 const session = require('express-session');
@@ -83,9 +83,15 @@ app.get('/', async (req, res) => {
 app.get('/quiz/:quizId', async (req, res) => {
     const user = getUser(req);
     if(user) {
-        const quiz = await getQuiz(req.params.quizId);
-        const questions = await getQuestions(req.params.quizId);
-        res.render('quiz', {quiz: quiz, questions: questions});
+        if((await isSolved(req.params.quizId, user.username))) {
+            const quizzes = await getQuizzes();
+            res.render('index', {message: "Już rozwiązałeś ten quiz!", quizzes: quizzes});
+        }
+        else {
+            const quiz = await getQuiz(req.params.quizId);
+            const questions = await getQuestions(req.params.quizId);
+            res.render('quiz', {quiz: quiz, questions: questions});
+        }
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})
