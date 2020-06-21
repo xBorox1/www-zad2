@@ -1,11 +1,17 @@
 html
     head
-        title Zmiana hasła
+        title Wyniki
     style
         include style.css
     body
-        h2 Zmiana hasła
-        form(action="/change" method="POST")
-            input(type="text" name="password" id="password" placeholder="Tutaj wpisz nowe hasło")
-            br
-            input(type='submit' value='Zmień')
+        h2 Wyniki quizu
+        p !{report}
+        h2 Top 5 najlepszych
+        each bes in best
+            p #{bes[0]} : Wynik - #{bes[1]}s :
+            each b in bes[2]
+                b #{b.num + 1} pytanie - #{b.time}s,
+        h2 Średnie czasy poprawnych odpowiedzi
+        each avg in averages
+            p  Pytanie #{avg[0] + 1} : #{avg[1]}
+        p Na pozostałe pytania nie została udzielona żadna poprawna odpowiedź.

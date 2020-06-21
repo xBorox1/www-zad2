@@ -1,5 +1,5 @@
-import {changePassword, getQuestions, getQuiz, getQuizzes, saveAnswers} from "./db";
-import {countResult, getReport} from "./results";
+import {changePassword, getAverageCorrect, getQuestions, getQuiz, getQuizzes, saveAnswers} from "./db";
+import {countResult, getBestResults, getReport} from "./results";
 
 const express = require('express');
 const session = require('express-session');
@@ -96,6 +96,9 @@ app.get('/results/:quizId', async (req, res) => {
     const user = getUser(req);
     if(user) {
         const report = await getReport(req.params.quizId, user.username);
+        const averages = await getAverageCorrect(req.params.quizId);
+        const best = await getBestResults(req.params.quizId);
+        res.render('results', {report: report, averages: averages, best: best});
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})
@@ -107,9 +110,12 @@ app.post('/results/:quizId', async (req, res) => {
     if(user) {
         const answers = req.body.answers.split(',');
         const times = req.body.times.split(',');
-        const result = countResult(req.params.quizId, answers, times);
+        const result = await countResult(req.params.quizId, answers, times);
         saveAnswers(req.params.quizId, user.username, result);
         const report = await getReport(req.params.quizId, user.username);
+        const averages = await getAverageCorrect(req.params.quizId);
+        const best = await getBestResults(req.params.quizId);
+        res.render('results', {report: report, averages: averages, best: best});
     }
     else {
         res.render('login', {message: "Nie jesteś zalogowany"})

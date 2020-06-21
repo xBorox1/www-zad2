@@ -133,7 +133,7 @@ export async function getUsers() {
     sqlite3.verbose();
     let users : User[] = [];
     let db = new sqlite3.Database('baza.db');
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT * FROM users;', [], (err, rows) => {
             if (err) throw(err);
             for(const row of rows)
@@ -151,7 +151,7 @@ export async function getQuizzes() {
     sqlite3.verbose();
     let quizzes : Quiz[] = [];
     let db = new sqlite3.Database('baza.db');
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT * FROM quizzes;', [], (err, rows) => {
             if (err) throw(err);
             for(const row of rows)
@@ -169,7 +169,7 @@ export async function getQuiz(id) {
     sqlite3.verbose();
     let db = new sqlite3.Database('baza.db');
     let quiz : Quiz;
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT * FROM quizzes WHERE id=' + id + ';', [], (err, rows) => {
             if (err) throw(err);
             for(const row of rows)
@@ -187,7 +187,7 @@ export async function getQuestions(quiz_id) {
     sqlite3.verbose();
     let questions : PartQuestion[] = [];
     let db = new sqlite3.Database('baza.db');
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT text, penalty FROM questions WHERE quiz_id=' + quiz_id + ' ORDER BY num;', [], (err, rows) => {
             if (err) throw(err);
             for(const row of rows)
@@ -205,12 +205,12 @@ export async function getAnswers(quiz_id) {
     sqlite3.verbose();
     let answers = [];
     let db = new sqlite3.Database('baza.db');
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT answer FROM questions WHERE quiz_id=' + quiz_id + ' ORDER BY num;', [], (err, rows) => {
             if (err) throw(err);
             for(const answer of rows)
             {
-                answers.push(answer);
+                answers.push(answer.answer);
             }
             resolve(rows);
         })});
@@ -232,6 +232,8 @@ export function saveAnswers(quiz_id, username, results) {
         counter++;
     }
 
+    command += ';';
+
     db.run(command);
     db.close();
 }
@@ -240,7 +242,7 @@ export async function getUserAnswers(quiz_id, username) {
     sqlite3.verbose();
     let answers : Answer[] = [];
     let db = new sqlite3.Database('baza.db');
-    await new Promise((resolve, rejest) => {
+    await new Promise((resolve, reject) => {
         db.all('SELECT * FROM answers WHERE quiz_id=' + quiz_id + ' AND username=' + '\"' + username + '\" ORDER BY num;', [], (err, rows) => {
             if (err) throw(err);
             for(const answer of rows)
@@ -251,6 +253,38 @@ export async function getUserAnswers(quiz_id, username) {
         })});
     db.close();
     return answers;
+}
+
+export async function getAverageCorrect(quiz_id) {
+    sqlite3.verbose();
+    let times = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, reject) => {
+        db.all('SELECT num, AVG(time) as avg FROM answers WHERE quiz_id=' + quiz_id + ' AND correct=1 GROUP BY num ORDER BY num;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const time of rows) {
+                times.push([time.num, time.avg]);
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return times;
+}
+
+export async function getBest(quiz_id) {
+    sqlite3.verbose();
+    let best = [];
+    let db = new sqlite3.Database('baza.db');
+    await new Promise((resolve, reject) => {
+        db.all('SELECT username, SUM(time) as sum FROM answers WHERE quiz_id=' + quiz_id + ' GROUP BY username ORDER BY sum LIMIT 5;', [], (err, rows) => {
+            if (err) throw(err);
+            for(const bes of rows) {
+                best.push([bes.username, bes.sum]);
+            }
+            resolve(rows);
+        })});
+    db.close();
+    return best;
 }
 
 export async function changePassword(user, password) {

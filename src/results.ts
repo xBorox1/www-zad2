@@ -1,4 +1,4 @@
-import {getAnswers, getQuestions, getUserAnswers} from "./db";
+import {getAnswers, getQuestions, getUserAnswers, getBest} from "./db";
 
 
 export async function countResult(quiz_id, answers, times) {
@@ -7,6 +7,8 @@ export async function countResult(quiz_id, answers, times) {
     let results = [];
 
     for(let i = 0; i < answers.length; i++) {
+        times[i] = Number(times[i]);
+        answers[i] = Number(answers[i]);
         if(answers[i] === correctAnswers[i]) {
             results.push([true, times[i], answers[i]]);
         }
@@ -14,6 +16,7 @@ export async function countResult(quiz_id, answers, times) {
             results.push([false, times[i] + questions[i].penalty, answers[i]]);
         }
     }
+
     return results;
 }
 
@@ -39,14 +42,27 @@ export async function getReport(quiz_id, username) {
         else {
             report += '<span class="incorrect"> niepoprawna </span>, prawidłowa : ' + correctAnswers[i];
             report += ', kara : ' + questions[i].penalty + "s";
-            report += ", czas : " + userAnswers[i].time + '<br>';
         }
+        report += ", czas : " + userAnswers[i].time + '<br>';
         sum += userAnswers[i].time;
     }
+
+    sum = Math.round(sum * 10) / 10;
 
     report += "Łączny czas : " + sum + '<br>';
     report += "Poprawnych odpowiedzi : " + cntCorrect + '<br>';
     return report;
+}
+
+export async function getBestResults(quiz_id) {
+    const best = [];
+    const bestUsers = await getBest(quiz_id);
+    for(const user of bestUsers) {
+        user[1] = Math.round(user[1] * 10) / 10;
+        const userAnswers = await getUserAnswers(quiz_id, user[0]);
+        best.push([user[0], user[1], userAnswers]);
+    }
+    return best;
 }
 
 
