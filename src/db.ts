@@ -316,9 +316,12 @@ export async function changePassword(user, password) {
     db.close();
 }
 
-function clearDB() {
+export function clearDB() {
     sqlite3.verbose();
     let db = new sqlite3.Database('baza.db');
     db.run('DROP TABLE users;');
+    db.run('DROP TABLE quizzes;');
+    db.run('DROP TABLE answers;');
+    db.run('DROP TABLE questions;');
     db.close();
 }

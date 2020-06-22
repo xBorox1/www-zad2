@@ -8,7 +8,7 @@ const flash = require('express-flash');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-const app = express();
+export const app = express();
 const port = 3000;
 
 app.set('view engine', 'pug');
@@ -17,7 +17,7 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(session({ secret: 'quiiiiizy', resave: true, saveUninitialized: true, cookie: { maxAge: 600000 }}))
+app.use(session({ secret: 'quiiiiizy', resave: false, saveUninitialized: false, cookie: { maxAge: 600000 }}))
 require('./auth').authInit();
 app.use(passport.initialize());
 app.use(passport.session());
@@ -41,7 +41,9 @@ app.post('/login', passport.authenticate('local', {
 
 app.get('/logout', (req, res) => {
     req.logOut();
-    res.redirect('/');
+    req.session.destroy(function (err) {
+        res.redirect('/');
+    });
 })
 
 app.get('/profile', function(req, res) {
@@ -50,7 +52,8 @@ app.get('/profile', function(req, res) {
         res.render('profile', {user: user});
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany!"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 });
 
@@ -60,7 +63,8 @@ app.get('/change', (req, res) => {
         res.render('change', {});
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
@@ -69,24 +73,28 @@ app.post('/change', async (req, res) => {
     if(user) {
         await changePassword(user, req.body.password);
         req.logOut();
-        res.render('login', {message: "Hasło zostało zmienione"})
+        req.flash('error', 'Hasło zostało zmienione');
+        req.session.destroy(function (err) {
+            res.redirect('/login');
+        });
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
 app.get('/', async (req, res) => {
     const quizzes = await getQuizzes();
-    res.render('index', {message: "", quizzes: quizzes});
+    res.render('index', {message: req.flash('error'), quizzes: quizzes});
 })
 
 app.get('/quiz/:quizId', async (req, res) => {
     const user = getUser(req);
     if(user) {
         if((await isSolved(req.params.quizId, user.username))) {
-            const quizzes = await getQuizzes();
-            res.render('index', {message: "Już rozwiązałeś ten quiz!", quizzes: quizzes});
+            req.flash('error', 'Już rozwiązałeś ten quiz!');
+            res.redirect('/');
         }
         else {
             const quiz = await getQuiz(req.params.quizId);
@@ -95,7 +103,8 @@ app.get('/quiz/:quizId', async (req, res) => {
         }
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
@@ -108,7 +117,8 @@ app.get('/results/:quizId', async (req, res) => {
         res.render('results', {report: report, averages: averages, best: best});
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
@@ -125,7 +135,8 @@ app.post('/results/:quizId', async (req, res) => {
         res.render('results', {report: report, averages: averages, best: best});
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
@@ -136,7 +147,8 @@ app.get('/solved', async (req, res) => {
         res.render('solved', {quizzes : quizzes});
     }
     else {
-        res.render('login', {message: "Nie jesteś zalogowany"})
+        req.flash('error', 'Nie jesteś zalogowany!');
+        res.redirect('/login');
     }
 })
 
